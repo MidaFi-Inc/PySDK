@@ -2,13 +2,9 @@ from algosdk.future.transaction import ApplicationNoOpTxn
 import algosdk.encoding as e
 from utils import txn
 
-def make_flash_loan(gtxn, sender, asset, amt, algod_client, params=None, testnet=False):
+def make_flash_loan(gtxn, sender, asset, amt, algod_client, app_id, params):
     
-    if testnet:
-        mainAppId = 98952143
-    else:
-        mainAppId = 98952143
-    mainAppAddr = e.encode_address(e.checksum(b'appID'+(mainAppId).to_bytes(8, 'big')))
+    mainAppAddr = e.encode_address(e.checksum(b'appID'+(app_id).to_bytes(8, 'big')))
 
     if not params:
         params = algod_client.suggested_params()
@@ -16,7 +12,7 @@ def make_flash_loan(gtxn, sender, asset, amt, algod_client, params=None, testnet
     borrow_call = ApplicationNoOpTxn(
         sender=sender,
         sp=params,
-        index=mainAppId,
+        index=app_id,
         foreign_assets=[asset],
         app_args=['loan', asset, amt],
     )
@@ -26,7 +22,7 @@ def make_flash_loan(gtxn, sender, asset, amt, algod_client, params=None, testnet
     repay_call = ApplicationNoOpTxn(
         sender=sender,
         sp=params,
-        index=mainAppId,
+        index=app_id,
         foreign_assets=[asset],
         app_args=['repay'],
     )

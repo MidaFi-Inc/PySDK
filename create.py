@@ -6,8 +6,8 @@ import base64
 import algosdk.encoding as e
 
 def sig(asa0, asa1, feeTier):
-    mainAppAddr = Addr("6MGHCXWOHEKHFWLWUYKHBTFRNISOYICFB35ERPKMWA3ZGVLHUMFR5ESWEQ") #Manual tests
-    mainApp = Int(98952143) #Manual tests
+    mainAppAddr = Addr("6MGHCXWOHEKHFWLWUYKHBTFRNISOYICFB35ERPKMWA3ZGVLHUMFR5ESWEQ")
+    mainApp = Int(98952143)
 
     program = And(
         asa0 > asa1,
@@ -52,16 +52,11 @@ def sig(asa0, asa1, feeTier):
     return compileTeal(program, mode=Mode.Signature, version=6)
 
 
-def createPool(sender, sender_private_key, asa0, asa1, algod_client, fee_tier=1, testnet=False):
-    
-    if testnet:
-        mainAppId = 98952143
-    else:
-        mainAppId = 98952143
+def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
     
     logicsig = LogicSigAccount(base64.decodebytes(algod_client.compile(sig(Int(asa0), Int(asa1), Int(fee_tier)))['result'].encode()))
     poolAddr = logicsig.address()
-    mainAppAddr = e.encode_address(e.checksum(b'appID'+(mainAppId).to_bytes(8, 'big')))
+    mainAppAddr = e.encode_address(e.checksum(b'appID'+(app_id).to_bytes(8, 'big')))
     
     params = algod_client.suggested_params()
     appsp = algod_client.suggested_params()
@@ -88,13 +83,14 @@ def createPool(sender, sender_private_key, asa0, asa1, algod_client, fee_tier=1,
     txapp = ApplicationOptInTxn(
         sender=poolAddr,
         sp=appsp,
-        index=mainAppId,
+        index=app_id,
         rekey_to=mainAppAddr,
         app_args=[1],
         foreign_assets=[asa0,asa1]
     )
-
-    if asa1 != 0:
+    gtxn = [tx1, tx2, txapp]
+    
+    if asa0 != 0:
         tx3 = AssetTransferTxn(
             sender=poolAddr,
             sp=params,
@@ -102,29 +98,6 @@ def createPool(sender, sender_private_key, asa0, asa1, algod_client, fee_tier=1,
             amt=0,
             index=asa1,
         )
+        gtxn.append(tx3)
 
-        gid = transaction.calculate_group_id([tx1,tx2,tx3,txapp])
-
-        tx1.group = gid
-        tx2.group = gid
-        tx3.group = gid
-        txapp.group = gid
-
-        stxn1 = tx1.sign(sender_private_key)
-        stxn2 = LogicSigTransaction(tx2,logicsig)
-        stxn3 = LogicSigTransaction(tx3,logicsig)
-        stxapp = LogicSigTransaction(txapp,logicsig)
-        algod_client.send_transactions([stxn1,stxn2,stxn3,stxapp])
-    else:
-        gid = transaction.calculate_group_id([tx1,tx2,txapp])
-
-        tx1.group = gid
-        tx2.group = gid
-        txapp.group = gid
-
-        stxn1 = tx1.sign(sender_private_key)
-        stxn2 = LogicSigTransaction(tx2,logicsig)
-        stxapp = LogicSigTransaction(txapp,logicsig)
-        algod_client.send_transactions([stxn1,stxn2,stxapp])
-
-    return poolAddr
+    return (logicsig, gtxn)
