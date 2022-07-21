@@ -53,7 +53,10 @@ def sig(asa0, asa1, feeTier):
 
 
 def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
-    
+    if asa0 < asa1:
+        t = asa0
+        asa0 = asa1
+        asa1 = t
     logicsig = LogicSigAccount(base64.decodebytes(algod_client.compile(sig(Int(asa0), Int(asa1), Int(fee_tier)))['result'].encode()))
     poolAddr = logicsig.address()
     mainAppAddr = e.encode_address(e.checksum(b'appID'+(app_id).to_bytes(8, 'big')))
@@ -64,7 +67,7 @@ def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
     params.flat_fee=True
     params.fee = 1000
     appsp.fee = 2000
-
+    
     tx1 = PaymentTxn(
         sender=sender,
         sp=params,
@@ -85,12 +88,12 @@ def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
         sp=appsp,
         index=app_id,
         rekey_to=mainAppAddr,
-        app_args=[1],
+        app_args=[fee_tier],
         foreign_assets=[asa0,asa1]
     )
     gtxn = [tx1, tx2, txapp]
-    
-    if asa0 != 0:
+
+    if asa1 != 0:
         tx3 = AssetTransferTxn(
             sender=poolAddr,
             sp=params,
@@ -98,6 +101,7 @@ def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
             amt=0,
             index=asa1,
         )
-        gtxn.append(tx3)
+        gtxn.insert(2, tx3)
 
     return (logicsig, gtxn)
+
