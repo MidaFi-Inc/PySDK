@@ -1,13 +1,12 @@
 from algosdk.future.transaction import ApplicationNoOpTxn
-from utils import txn
-from MFLogicSig import sig
+from utils import txn, test_app_id, test_com_token, main_com_token
 
 def swap_exact(sender, asset1, asset2, asset1_amt, receiving_amt, lp_id, pool_addr, end_receiver, app_id, params): 
 
-    if app_id == 98952143: 
-        community_token = 123456
+    if app_id == test_app_id: 
+        community_token = test_com_token
     else:
-        community_token = 123456
+        community_token = main_com_token
 
     foreign_assets = [asset1, asset2, lp_id, community_token]
 

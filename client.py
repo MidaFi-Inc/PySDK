@@ -5,7 +5,7 @@ from swap import swap
 from swap_exact import swap_exact
 from mint import mint
 from burn import burn
-from utils import sign_group
+from utils import sign_group, test_app_id, main_app_id
 from MFLogicSig import sig
 from create import createPool
 from flash_loan import make_flash_loan
@@ -19,14 +19,14 @@ class MidaClient:
     #   addr: str, an algorand account address
     #   pk: str, the private key to addr
     #   net: str, defaulted to 'main' for interacting with mainnet, 'test' for testnet
-    def __init__(self, algod: algod.AlgodClient, addr=None, pk=None, net='main', ):
+    def __init__(self, algod: algod.AlgodClient, addr=None, pk=None, net='main'):
         self.algod = algod
         self.addr = addr
         self.pk = pk
         if net == 'test':
-            self.app_id = 98952143 # will need to be main one
+            self.app_id = test_app_id
         else:
-            self.app_id = 98952143
+            self.app_id = main_app_id
 
     # create a swap transaction
     # returns an unsigned and ungrouped list of the transactions
@@ -123,6 +123,7 @@ class MidaClient:
                     min_asset2, pool, end_receiver, self.app_id, params)
     
     # creates and sends transactions to create a new liquidity pool
+    # returns the address of the created pool
     #   asset1: int, asset id of the first asset in the pool, 0 if ALGO
     #   asset2: int, asset id of the second asset
     #   fee_tier: int, 1 through 6, fee_tier of the pool which correspond to
@@ -136,7 +137,9 @@ class MidaClient:
         signed_group = [stxn1, stxn2, stxn3]
         if len(gtxn) == 4:
             signed_group.append(LogicSigTransaction(gtxn[3],logicsig))
-        self.algod.send_transactions(signed_group)
+        tx_id = self.algod.send_transactions(signed_group)
+        wait_for_confirmation(self.algod, tx_id)
+        return logicsig.address()
 
     # wraps a gtxn in a flash loan
     # returns a list of the ungrouped and unsigned transactions
@@ -182,7 +185,7 @@ class MidaClient:
     #   gtxn: list of transactions
     #   wait: bool, True to wait for the transaction to be commited into a block,
     #               False to immediately continue executing
-    def send_group(self, gtxn, wait=False):
+    def send_group(self, gtxn, wait=True):
         gtxn = sign_group(gtxn, self.pk)
         tx_id = self.algod.send_transactions(gtxn)
         if wait:

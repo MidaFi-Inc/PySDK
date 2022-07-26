@@ -1,13 +1,12 @@
 from algosdk.future.transaction import ApplicationNoOpTxn
-from utils import txn
-from MFLogicSig import sig
+from utils import txn, test_app_id, test_com_token, main_com_token
 
 def burn(sender, lp_id, lp_amt, asset1, asset2, min_asset1, min_asset2, pool_addr, end_receiver, app_id, params):
 
-    if app_id == 98952143: 
-        community_token = 123456
+    if app_id == test_app_id: 
+        community_token = test_com_token
     else:
-        community_token = 123456
+        community_token = main_com_token
 
     foreign_assets = [asset1, asset2, lp_id, community_token]
 

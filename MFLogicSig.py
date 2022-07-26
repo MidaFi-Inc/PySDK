@@ -7,8 +7,8 @@ def sig(asa0, asa1, feeTier, algod_client):
     asa0 = Int(asa0)
     asa1 = Int(asa1)
     feeTier = Int(feeTier)
-    mainAppAddr = Addr("6MGHCXWOHEKHFWLWUYKHBTFRNISOYICFB35ERPKMWA3ZGVLHUMFR5ESWEQ")
-    mainApp = Int(98952143)
+    mainAppAddr = Addr("DLFFM3JUFZDAILYYGF6PCWIDZE3ALYFVP7J62IGFUOWYMTE5H76PTBKOOE")
+    mainApp = Int(100635609)
 
     program = And(
         asa0 > asa1,

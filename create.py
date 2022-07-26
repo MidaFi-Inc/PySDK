@@ -1,13 +1,12 @@
 from pyteal import *
-from algosdk.future import transaction
 from algosdk.future.transaction import LogicSigAccount, LogicSigTransaction, PaymentTxn, ApplicationNoOpTxn, AssetTransferTxn, ApplicationOptInTxn
 from pyteal import *
 import base64
-import algosdk.encoding as e
+from utils import main_app_addr, test_app_id, test_app_addr
 
-def sig(asa0, asa1, feeTier):
-    mainAppAddr = Addr("6MGHCXWOHEKHFWLWUYKHBTFRNISOYICFB35ERPKMWA3ZGVLHUMFR5ESWEQ")
-    mainApp = Int(98952143)
+def sig(asa0, asa1, feeTier, app_id, app_addr):
+    mainAppAddr = Addr(app_addr)
+    mainApp = Int(app_id)
 
     program = And(
         asa0 > asa1,
@@ -57,9 +56,13 @@ def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
         t = asa0
         asa0 = asa1
         asa1 = t
-    logicsig = LogicSigAccount(base64.decodebytes(algod_client.compile(sig(Int(asa0), Int(asa1), Int(fee_tier)))['result'].encode()))
+    if app_id == test_app_id:
+        app_addr = test_app_addr
+    else:
+        app_addr = main_app_addr
+    
+    logicsig = LogicSigAccount(base64.decodebytes(algod_client.compile(sig(Int(asa0), Int(asa1), Int(fee_tier), app_id, app_addr))['result'].encode()))
     poolAddr = logicsig.address()
-    mainAppAddr = e.encode_address(e.checksum(b'appID'+(app_id).to_bytes(8, 'big')))
     
     params = algod_client.suggested_params()
     appsp = algod_client.suggested_params()
@@ -87,7 +90,7 @@ def createPool(sender, asa0, asa1, algod_client, fee_tier, app_id):
         sender=poolAddr,
         sp=appsp,
         index=app_id,
-        rekey_to=mainAppAddr,
+        rekey_to=app_addr,
         app_args=[fee_tier],
         foreign_assets=[asa0,asa1]
     )

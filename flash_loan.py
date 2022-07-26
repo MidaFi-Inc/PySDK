@@ -1,13 +1,12 @@
 from algosdk.future.transaction import ApplicationNoOpTxn
-import algosdk.encoding as e
-from utils import txn
+from utils import txn, test_app_id, test_com_token, main_com_token
 
 def make_flash_loan(gtxn, sender, receiver, pool, asset1, amt, asset2, lp_id, algod_client, app_id, params):
     
-    if app_id == 98952143: 
-        community_token = 123456
+    if app_id == test_app_id: 
+        community_token = test_com_token
     else:
-        community_token = 123456
+        community_token = main_com_token
 
     if not params:
         params = algod_client.suggested_params()
