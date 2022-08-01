@@ -1,6 +1,7 @@
+import base64
 from algosdk import *
 from algosdk.v2client import algod
-from algosdk.future.transaction import assign_group_id, LogicSigTransaction, wait_for_confirmation
+from algosdk.future.transaction import LogicSigAccount, assign_group_id, LogicSigTransaction, wait_for_confirmation
 from swap import swap
 from swap_exact import swap_exact
 from mint import mint
@@ -167,8 +168,12 @@ class MidaClient:
     # returns the address of a pool of a given two assets and fee tier
     def get_pool_addr(self, asset1, asset2, fee_tier):
         if asset1 > asset2:
-            return sig(asset1, asset2, fee_tier, self.algod)
-        return sig(asset2, asset1, fee_tier, self.algod)
+            compiled_sig = sig(asset1, asset2, fee_tier, self.app_id)
+        else:
+            compiled_sig = sig(asset2, asset1, fee_tier, self.app_id)
+        logicsig = LogicSigAccount(base64.decodebytes(self.algod.compile(compiled_sig)['result'].encode()))
+        addr = logicsig.address()
+        return addr
     
     # returns a tuple of the assets in the liquidity pool
     # (asset1, asset2) where the id of asset1 > asset2

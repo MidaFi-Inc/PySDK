@@ -31,15 +31,15 @@ optin = txn(lp_id, 0, midafi_client.addr, midafi_client.addr, midafi_client.algo
 
 # create a transaction to mint to the pool
 asset1_mint_amt = 11000000 # set to 11 algos
-asset2_mint_amt = 11000000
+asset2_mint_amt = 11000000 # this may need to change based on the number of this asset held
 m = midafi_client.mint(asset1, asset2, asset1_mint_amt, asset2_mint_amt, pool=my_new_pool, lp_id=lp_id)
 
 # create a transaction to swap against the pool asset1 -> asset2
 asset1_swap_amt = 100000
-s = midafi_client.swap(asset1, asset2, asset1_swap_amt, pool=my_new_pool, lp_id=lp_id, slippage=50)
+s = midafi_client.swap(asset1, asset2, asset1_swap_amt, pool=my_new_pool, lp_id=lp_id, slippage=100)
 
 # create a transaction to burn some of the minted LP tokens
-lp_burn_amt = 5000000
+lp_burn_amt = 500000
 b = midafi_client.burn(lp_id, lp_burn_amt, asset1, asset2, pool=my_new_pool)
 
 # create one list of transactions
